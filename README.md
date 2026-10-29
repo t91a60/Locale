@@ -1,5 +1,21 @@
 # Resonite Locale
+
+This repository is a fork of [Yellow-Dog-Man/Locale](https://github.com/Yellow-Dog-Man/Locale). The upstream contribution and release process below describes the Resonite project; changes in this fork reach Resonite only if accepted upstream.
+
 This repository contains the locale assets for the core UI of [Resonite](https://resonite.com) and allows anyone to contribute translations. The contents of this repository will be periodically merged with the public build released on Steam (STEAM) and other platforms.
+
+## Repository contents
+
+This is a translation asset repository, not a standalone application. Resonite is needed to test strings in context. Python 3 is only needed for local JSON checks and the optional formatting helper; the helper uses the standard library and requires no package installation.
+
+| Path | Purpose |
+| --- | --- |
+| `en.json` | English keys and baseline formatting |
+| `<language-code>.json` | Locale metadata, author credits and translated messages |
+| `Missing/` | Reports of missing translation keys |
+| `Store/` | Optional translated store descriptions |
+| `Steam/` | Steam rich-presence strings; see [format guidance](Steam/Readme.md) |
+| `CleanJSON.py` | Reorders and formats one locale against the English baseline |
 
 ## Localization Status
 Czech [cs] - 100.0% - Missing keys: 0  
@@ -79,9 +95,17 @@ By default, Resonite uses your system locale to determine which file to load. Yo
 ### If you use an external tool to do the translation and the JSON structure is mangled
 You can use the python script in this repository: CleanJSON.py
 
-For example to clean the french json, `./CleanJSON.py --en en.json --lang fr.json --out fr.json.cleaned`
+For example, format French into a separate output file, then inspect the diff before replacing the original:
 
-```usage: CleanJSON.py [-h] [--en en_path] [--lang lang_path] [--out out_path]
+```bash
+python3 CleanJSON.py --en en.json --lang fr.json --out fr.json.cleaned
+git diff --no-index -- fr.json fr.json.cleaned
+```
+
+The diff command exits with status 1 when files differ. The helper follows keys in `en.json`; it does not translate, validate ICU expressions or retain unknown message keys. Keep the original until you have reviewed the output.
+
+```text
+usage: CleanJSON.py [-h] [--en en_path] [--lang lang_path] [--out out_path]
 
 This script will reformat a Babel style JSON for locales to match the en.json
 baseline formatting for git changes purposes.
@@ -96,7 +120,7 @@ optional arguments:
 ## Do's and Don'ts
 - Make sure the .json locale file is UTF8 encoded
 - Always keep the "Dummy" : "Dummy" entry at the bottom of the file. This way you don't have to remember to remove the comma at the end of the last entry every time
-- Copy & Paste the whole content of the file into this online validator to ensure you don't have any syntax errors: https://jsonformatter.curiousconcept.com/
+- Validate JSON locally before submitting; the command below avoids uploading translation files to a third-party site.
 - **DO** use spaces instead of tabs to keep the formatting of all documents consistent
 - **DO** check if other users are making modifications to the same locale as you are in Issues and coordinate. If you send changes that conflict with other users, it's hard to resolve them on our end since we don't understand the language.
 - **DO** keep the same style of formatting and coloring where it's present in the text to ensure it stays consistent across locales. Coloring in particular can be contextual and used in other parts of the UI and changing or removing it would cause user confusion.
@@ -140,6 +164,19 @@ We recommend putting most translations into the general language file (single tw
 
 Any strings you don't translate at all will also fall back into their English variants, so you don't have to worry about missing some of them, they can be translated later (or by another contributor). This also ensures that newly added strings in the English will show up and can be gradually translated as they come.
 
+## Local validation
+
+From the repository root, check the files you changed:
+
+```bash
+python3 -m json.tool fr.json > /dev/null
+python3 CleanJSON.py --help
+```
+
+Replace `fr.json` with your locale. On Windows, use `py -3` in place of `python3` if that is how Python is installed; omit the output redirection to print the parsed JSON. Syntax validation does not check message meaning, placeholder consistency or ICU plural/select expressions. Test those in Resonite using the steps above.
+
+Keep `localeCode`, the `authors` array, the `messages` object and the final `Dummy` entry. Follow `.editorconfig`: UTF-8, four spaces and LF line endings for JSON. There is no build step, dependency manifest or standalone application test suite in this repository.
+
 ## CI
 When you open a PR some tooling will run to validate that your JSON is valid and that your changes do not include any keys that are not found in the english file. If these checks fail, we cannot merge your PR so make sure to look into why the failure occurs.
 
@@ -155,3 +192,7 @@ Currently there are a few known parts that cannot be translated, but are planned
 
 ### Any other questions?
 If you have questions or are unsure about something, you can create an Issue on this repository to ask a question
+
+## License
+
+The repository includes the [MIT License](LICENSE), copyright Yellow Dog Man Studios s.r.o. Preserve the license and existing translator credits when contributing.
